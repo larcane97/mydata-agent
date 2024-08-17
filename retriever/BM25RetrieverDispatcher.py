@@ -16,16 +16,12 @@ class BM25RetrieverDispatcher(RetrieverDispatcher):
     text_splitter: TextSplitter
     embedding_model: Embeddings
 
-    def __init__(self, text_splitter: TextSplitter, embedding_model: Embeddings):
-        if embedding_model is None:
-            raise AttributeError("embedding_model이 반드시 필요합니다.")
-
+    def __init__(self, text_splitter: TextSplitter = None):
         self.text_splitter = text_splitter
-        self.embedding_model = embedding_model
 
     def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
         if isinstance(docs, BaseLoader):
-            if self.embedding_model is None or not isinstance(self.text_splitter, TextSplitter):
+            if self.text_splitter is None or not isinstance(self.text_splitter, TextSplitter):
                 docs = docs.load()
             else:
                 docs = docs.load_and_split(self.text_splitter)
