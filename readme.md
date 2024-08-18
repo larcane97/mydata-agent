@@ -110,15 +110,35 @@ class Config:
 ```
 
 - `Config` class에서 모든 의존성을 주입
+- 각 클래스는 lazy loading 기반 singleton instance를 사용해 여러번 호출되더라도
 - 해당 class에만 모든 의존성을 갖고 있고, 그 외에는 interface를 기반으로 동작
 - 새로운 component가 추가되더라도 Config class만 수정하면 기존 코드를 수정하지 않고 새로운 기능을 추가할 수 있다.
 
-## 환경 설정(conda)
+## 환경 설정
+
+### 가상 환경 설정
 
 ```shell
 conda create --name mydata-agent python=3.11.9 -y
 conda activate mydata-agent
 pip install -r requirements.txt
+```
+
+### Ollama 설치
+
+```shell
+# linux
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve
+ollama pull dolphin-llama3:8b
+```
+
+- [Ollama download 공식 홈페이지](https://ollama.com/download)
+
+### 테스트 코드 수행
+
+```shell
+pytest
 ```
 
 ## 실행 방법
@@ -136,6 +156,19 @@ python app.py
 ```
 
 ## 추가 구현 사항
+
+### 디버깅
+
+`.env` 파일 내에 `langsmith` 설정을 통해 tools이 제대로 사용되는지 확인
+
+.env파일 예시
+
+```text
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+LANGCHAIN_API_KEY="<API-KEY>"
+LANGCHAIN_PROJECT="<PROJECT-NAME>"
+```
 
 ### 동시성 문제
 
@@ -180,7 +213,26 @@ async def process_batch():
 - 주기적으로 request_queue를 확인하면서 request_queue에 request가 존재하는 경우 batch로 처리
 - 추가적으로 사용자별 ID를 request 시에 입력받는다면, 사용자별 rate limiter를 설정할 수 있다.
 
-### 멀티 모달
+### 모델 토큰 제한
+
+- 마이데이터 공식 문서를 `TextSplitter`를 사용해 특정 길이의 chunk로 분리하여 모델에 들어가는 최대 document token 수를 제한
+
+```python
+# In FaissRetrieverDispatcher
+def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
+    if isinstance(docs, BaseLoader):
+        if self.embedding_model is None or not isinstance(self.text_splitter, TextSplitter):
+            docs = docs.load()
+        else:
+            docs = docs.load_and_split(self.text_splitter)
+
+    faiss_vector_store = FAISS.from_documents(docs, embedding=self.embedding_model)
+
+    return faiss_vector_store.as_retriever()
+```
+
+- 이 외 추가적으로 `RaptorRetriever`와 같은 기법을 사용해 작은 토큰 수를 기반으로 long context에 대한 정보를 유지하도록 할 수 있다.
+- 더 간단하게는 사용자 입력이 특정 수 이상이거나, 문서의 길이가 너무 긴 경우 요약 모델을 사용해 전체 크기를 줄이는 방법을 사용할 수 있다.
 
 
 
