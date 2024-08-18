@@ -24,7 +24,7 @@ class EnsembleFaissBM25RetrieverDispatcher(RetrieverDispatcher):
         self.text_splitter = text_splitter
         self.embedding_model = embedding_model
 
-    def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
+    def get_retriever(self, docs: Union[BaseLoader, List[Document]], **kwargs) -> BaseRetriever:
         if isinstance(docs, BaseLoader):
             if self.embedding_model is None or not isinstance(self.text_splitter, TextSplitter):
                 docs = docs.load()
@@ -32,7 +32,7 @@ class EnsembleFaissBM25RetrieverDispatcher(RetrieverDispatcher):
                 docs = docs.load_and_split(self.text_splitter)
 
         faiss_vector_store = FAISS.from_documents(docs, embedding=self.embedding_model)
-        faiss_retriever = faiss_vector_store.as_retriever()
+        faiss_retriever = faiss_vector_store.as_retriever(**kwargs)
         bm25_retriever = BM25Retriever.from_documents(docs)
         retriever = EnsembleRetriever(
             retrievers=[faiss_retriever, bm25_retriever],

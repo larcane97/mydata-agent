@@ -8,5 +8,5 @@ from langchain_core.retrievers import BaseRetriever
 
 class RetrieverDispatcher(ABC):
     @abstractmethod
-    def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
+    def get_retriever(self, docs: Union[BaseLoader, List[Document]], **kwargs) -> BaseRetriever:
         raise NotImplementedError

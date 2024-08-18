@@ -19,11 +19,11 @@ class BM25RetrieverDispatcher(RetrieverDispatcher):
     def __init__(self, text_splitter: TextSplitter = None):
         self.text_splitter = text_splitter
 
-    def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
+    def get_retriever(self, docs: Union[BaseLoader, List[Document]], **kwargs) -> BaseRetriever:
         if isinstance(docs, BaseLoader):
             if self.text_splitter is None or not isinstance(self.text_splitter, TextSplitter):
                 docs = docs.load()
             else:
                 docs = docs.load_and_split(self.text_splitter)
 
-        return BM25Retriever.from_documents(docs)
+        return BM25Retriever.from_documents(docs, **kwargs)

@@ -25,7 +25,7 @@ class RaptorFaissRetrieverDispatcher(RetrieverDispatcher):
         self.embedding_model = embedding_model
         self.chat_model = chat_model
 
-    def get_retriever(self, docs: Union[BaseLoader, List[Document]]) -> BaseRetriever:
+    def get_retriever(self, docs: Union[BaseLoader, List[Document]], **kwargs) -> BaseRetriever:
         if isinstance(docs, BaseLoader):
             docs = docs.load()
 
@@ -38,7 +38,7 @@ class RaptorFaissRetrieverDispatcher(RetrieverDispatcher):
             all_texts.extend(summaries)
 
         vector_store = FAISS.from_texts(all_texts, embedding=self.embedding_model)
-        return vector_store.as_retriever()
+        return vector_store.as_retriever(**kwargs)
 
     def recursive_embed_cluster_summarize(
             self, texts: List[str], level: int = 1, n_levels: int = 3
